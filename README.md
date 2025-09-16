@@ -9,7 +9,7 @@ In this project, I analyzed the dataset to uncover meaningful patterns in employ
 
 ## 🔗 Live Report
 - **Interactive HTML (GitHub Pages):** (https://gerardoab111.github.io/Human-Resources-Case-Study/)  
-- **Source RMarkdown (.Rmd):** `case_study_bellabeat.Rmd`
+- **Source RMarkdown (.Rmd):** `hr_case_study.Rmd`
 
 ---
 
