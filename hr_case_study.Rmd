@@ -1,0 +1,1225 @@
+---
+title: "Human Resources Case Study"
+author: "Gerardo Abarca"
+date: "2025-09-06"
+output:
+  html_document:
+    theme: flatly
+    toc: true
+    toc_float: true
+    highlight: zenburn
+  pdf_document:
+    latex_engine: xelatex
+---
+
+### Human Resources Dataset  
+
+This project explores the *Human Resources Data Set* published on Kaggle by Richard Huebner.  
+The dataset provides detailed employee records, including demographic information, job roles, compensation, performance, and termination history.  
+
+By analyzing this dataset, the goal is to uncover *patterns in employee demographics, performance, retention, and turnover*. These insights can help HR departments identify potential risk factors for attrition, improve employee engagement, and optimize recruitment and retention strategies.  
+
+This project follows six key steps that guide the completion of the case study:  
+
+1. *Ask* – Define the business problem and objectives.  
+2. *Prepare* – Collect and organize the dataset.  
+3. *Process* – Clean and structure the data for analysis.  
+4. *Analyze* – Identify trends, patterns, and insights.  
+5. *Share* – Communicate findings through reports and visualizations.  
+6. *Act* – Apply insights to support HR decision-making and strategy.  
+
+---
+
+## 💡 Ask  
+
+The goal of this phase is to define the analytical problem, align with stakeholder needs, and clarify the business task.
+
+### Guiding Questions  
+
+From dataset prompts:
+
+- Does the reporting structure (manager → employee) influence performance?  
+- What is the organization’s diversity profile (e.g., gender, race, age)?  
+- Which recruiting sources contribute most to building a diverse workforce?  
+- Can we predict employee termination (voluntary or involuntary)? With what accuracy?  
+- Are there pay disparities across departments, genders, or roles? 
+
+---
+
+### Business Problem
+
+Many organizations struggle with turnover, performance management, and equity.  
+This dataset provides an opportunity to uncover how demographics, management, and recruiting sources influence employee outcomes.
+
+---
+
+### How Insights Can Drive Decisions
+
+- Detecting pay gaps informs fair compensation policies.  
+- Identifying diversity bottlenecks supports inclusive recruitment.  
+- Predicting termination risk helps HR intervene early.  
+- Linking managers to performance outcomes enables leadership coaching.  
+
+---
+
+### Key Tasks
+
+- Investigate performance, diversity, turnover, and pay equity trends.  
+- Generate insights into recruiting and retention strategies.  
+- Provide actionable recommendations to HR executives, managers, and recruiters.  
+
+---
+
+### Stakeholders
+
+- *HR Executives*: Interested in turnover drivers and diversity metrics.  
+- *Recruitment Specialists*: Need to optimize sourcing strategies.  
+- *Managers*: Want to understand team performance and engagement.  
+- *Executive Leadership*: Seeks a data-driven workforce health overview.  
+
+---
+
+### Deliverable
+
+The business task is to analyze the Human Resources dataset to answer targeted workforce questions on *performance, diversity, recruiting effectiveness, turnover prediction, and pay equity*.  
+These insights will guide HR strategy in *engagement, retention, and equitable practices*. 
+
+---
+
+## 📌 Prepare  
+
+The goal of this phase is to gather the data, assess its quality, and identify relevant features.  
+
+#### Guiding Questions  
+
+- *Where is your dataset stored?*  
+  The dataset is available on Kaggle: 
+  [Human Resources Data Set](https://www.kaggle.com/datasets/rhuebner/human-resources-data-set).  
+
+- *How is the data organized?*  
+  The dataset consists of a single CSV file with over 300 rows and 35+ columns. It contains employee-level records, including demographics, job information, performance scores, and employment status.  
+
+- *Does your data ROCCC?*  
+
+  - *Reliable:* Yes; the dataset is consistent, though not guaranteed to represent a real company.
+  - *Original:* Secondary dataset, shared for public use.  
+  - *Comprehensive:* Includes demographics, performance, salaries, and termination details.  
+  - *Current:* Data is static and not tied to a specific year; it is suitable for case study purposes.  
+  - *Cited:* Dataset author is Richard Huebner on Kaggle.  
+
+- *What are the problems with the data?*  
+
+  - Contains redundant ID columns (e.g., GenderID vs. Sex, DeptID vs. Department).  
+  - No lookup tables for coded IDs.  
+  - Some duplication in field types.  
+  - Termination data requires careful interpretation (voluntary vs. involuntary).  
+
+- *Licensing, privacy, security*  
+
+  - The dataset is shared on Kaggle under a *CC-BY-NC-ND 4.0 International License*.  
+  - This license requires attribution to the authors (Dr. Carla Patalano & Dr. Richard Huebner), 
+  restricts commercial use, and does not allow redistribution of modified versions.
+
+For portfolio purposes, the dataset can be analyzed and insights shared, as long as the authors are credited.
+  
+- *How did you verify the data’s integrity?*  
+  By reviewing column distributions, checking for duplicates, and profiling categorical variables.
+
+---
+
+#### Key Tasks  
+
+1. *Download the data* → Retrieved from Kaggle and stored locally.  
+2. *Inspect the file* → Reviewed the CSV to understand column definitions and values.
+
+---
+
+#### Transition to Process  
+
+With the dataset prepared and scoped, the next step is to *clean and structure it for analysis*. This involves handling missing values, checking data types (dates, numeric vs. categorical), and ensuring variables are consistent and ready to explore. 
+
+---
+
+## ⚙️ Process
+
+In this phase, the dataset was cleaned, standardized, and prepared for analysis. 
+
+*Load required libraries*  
+
+Installed and loaded key packages for data wrangling, cleaning, and visualization:
+
+- tidyverse for general data manipulation.  
+- lubridate for working with dates.  
+- dplyr for transformations.  
+- readr for importing data.  
+- ggplot2 for visualization.  
+- janitor for cleaning column names.
+- ggrepel for smarter label placement to avoid overlaps in plots.
+   
+```{r}
+#install.packages("tidyverse")
+#install.packages("lubridate")
+#install.packages("dplyr")
+#install.packages("readr")
+#install.packages("ggplot2")
+#install.packages("janitor")
+#install.packages("ggrepel")
+
+
+library("tidyverse")
+library("lubridate")
+library("dplyr")
+library("readr")
+library("ggplot2")
+library("janitor")
+library("ggrepel")
+```
+
+### Load dataset
+
+- The HR dataset was imported from a CSV file
+
+```{r}
+dataset <- read_csv("HRDataset_v14.csv")
+```
+
+### Remove redundant ID columns
+
+Columns that served only as numeric identifiers (MarriedID, MaritalStatusID, GenderID, EmpStatusID, DeptID, PerfScoreID, ManagerID, PositionID, Termd) were removed because they do not add analytical value.
+
+```{r}
+dataset_updated <- dataset %>%
+  select(-MarriedID, -MaritalStatusID, -GenderID, -EmpStatusID, -DeptID, -PerfScoreID, 
+         -ManagerID, -PositionID, -Termd)
+```
+
+### Map binary indicator to categorical values
+
+The column FromDiversityJobFairID was converted into a new categorical variable FromDiversityJobFair with "Yes" and "No".
+
+```{r}
+dataset_updated <- dataset_updated %>%
+  mutate(
+    FromDiversityJobFair = case_when(
+      FromDiversityJobFairID == 1 ~ "Yes",
+      FromDiversityJobFairID == 0 ~ "No",
+      TRUE ~ NA_character_
+    )
+  ) %>%
+  select(-FromDiversityJobFairID)  # drop the original ID column
+```
+
+### Clean column names
+Standardized all column names to snake_case format for easier reference.
+
+```{r}
+dataset_updated <- dataset_updated %>%
+  janitor::clean_names()
+```
+
+### Convert date variables
+Converted character date columns into Date type using lubridate::mdy()
+
+```{r}
+dataset_updated <- dataset_updated %>%
+  mutate(
+    dob = mdy(dob),
+    dateof_hire = mdy(dateof_hire),
+    dateof_termination = mdy(dateof_termination),
+    last_performance_review_date = mdy(last_performance_review_date)
+  )
+```
+
+### Check duplicates
+Verified that employees are uniquely identified by both employee_name and emp_id
+
+```{r}
+dataset_updated %>%
+  count(employee_name) %>%
+  filter(n > 1)
+
+dataset_updated %>%
+  count(emp_id) %>%
+  filter(n > 1)
+```
+
+### Missing values audit
+Checked the dataset for missing values.
+
+```{r}
+colSums(is.na(dataset_updated))
+```
+
+### Outlier detection
+Used summary statistics and a boxplot to identify potential outliers in salary
+
+```{r}
+summary(dataset_updated$salary)
+boxplot(dataset_updated$salary)
+```
+
+### Categorical consistency check
+Validated that categorical variables such as citizen_desc have consistent categories.
+
+```{r}
+dataset_updated %>% count(citizen_desc)
+```
+
+### ✅ Outcome
+
+At the end of the process phase, the dataset is:
+
+- Cleaned of redundant identifiers.
+- Properly typed (dates, numeric, categorical).
+- Free of duplicates.
+- Audited for missing values and outliers.
+- Standardized for consistent analysis.
+
+---
+
+### Actions Performed in Data Cleaning:
+
+The dataset was cleaned and standardized to ensure accuracy, consistency, and usability.  
+Key cleaning steps included removing redundant ID columns, standardizing date formats, renaming variables, handling categorical encodings, and checking for duplicates or missing values.  
+
+---
+
+At the end of this process, the reasoning behind these actions can be summarized as follows:  
+
+- *Backup and reproducibility:* The raw dataset dataset was preserved, while all cleaning was done on a working copy dataset_updated. This ensures a reliable backup and makes it faster to replicate or adjust the cleaning process from the ground up. 
+
+- *Consistency in naming:* Column names were standardized using janitor::clean_names() to make them more readable and consistent for coding.  
+
+- *Correct data types:* All date variables were converted from character strings to proper date formats. This allows time-based calculations (e.g., tenure, age) and ensures accurate analysis.  
+
+- *Clearer categorical values:* I mapped binary indicators (e.g., FromDiversityJobFairID) into more descriptive labels (“Yes”/“No”). This makes the dataset easier to interpret and avoids confusion from numeric codes.  
+
+- *Reducing redundancy:* Numeric ID columns that only served as lookup references were dropped. The descriptive variables provide the actual information needed, so removing IDs keeps the dataset clean and focused.  
+
+- *Quality checks:* I inspected duplicates, missing values, distributions, and outliers (e.g., salary boxplots). This was done to validate the integrity of the dataset before moving into the analysis phase.  
+
+*Overall, these steps were taken to *ensure the dataset is reliable, consistent, and ready for meaningful analysis*. The cleaned dataset can now be used confidently for visualization, summary statistics, and predictive modeling.*
+
+---
+
+#### Selected Features (to be used)  
+
+- *Employee Demographics:* Sex, MaritalDesc, RaceDesc, CitizenDesc, HispanicLatino, DOB, State, Zip.
+- *Job Information:* Position, Department, ManagerName, RecruitmentSource, Salary.  
+- *Employment Status:* EmploymentStatus, DateofHire, DateofTermination, TermReason.  
+- *Performance & Engagement:* PerformanceScore, EngagementSurvey, EmpSatisfaction, SpecialProjectsCount, LastPerformanceReview_Date, DaysLateLast30, Absences.
+
+---
+
+#### Features Not Selected (excluded from analysis)  
+
+- Encoded ID columns (e.g., MarriedID, MaritalStatusID, GenderID, DeptID, PerfScoreID, PositionID, ManagerID, EmpStatusID) were excluded.  
+- These are numeric codes without lookup tables.  
+- Instead, their *categorical equivalents* (e.g., MaritalDesc, Sex, Department, PerformanceScore, EmploymentStatus) were retained for analysis.  
+- These variables will be summarized using *counts, percentages, or distributions* rather than averages, since the numeric codes themselves are not meaningful.  
+
+---
+
+#### Deliverable  
+
+A curated version of the Human Resources dataset, retaining descriptive variables and removing redundant IDs, ready for processing.  
+
+*The dataset is now ready for the analysis phase.*
+
+---
+
+## 🔍 Analyze and Data Visualization
+
+#### Changing the variable name for better accuracy
+
+```{r}
+hr_data <- dataset_updated
+```
+
+#### Adding more variables for EDA
+
+```{r}
+hr_data <- hr_data %>%
+  filter(dob <= Sys.Date()) %>%  # remove future DOBs first
+  mutate(hire_year = year(dateof_hire), 
+         hire_month=month(dateof_hire, label=TRUE),
+         tenure_in_years = time_length(interval(dateof_hire, coalesce(dateof_termination,today())),"years"),
+         age = round(time_length(interval(dob, today()),"years"),0))
+```
+
+#### Showing the central dataset to work with
+
+```{r}
+print(hr_data, width=Inf)
+```
+
+### 1st Question: Does the reporting structure (manager → employee) influence performance?
+
+Defining my scope of work for this business question
+
+```{r}
+
+# We create another variable the data to answer this question (manager_summary)
+manager_summary <- hr_data %>%
+  group_by(manager_name) %>%
+  filter(n()>5) %>% #keep only managers who supervise more than 5 employees, because Small groups (like managers with 1–2 employees) can distort averages.
+  group_by(manager_name) %>%
+  summarize(
+    avg_tenure = mean(tenure_in_years, na.rm=TRUE),
+    total_employees = n(),
+    avg_engagement = mean(engagement_survey, na.rm=TRUE),
+    avg_performance = mean(emp_satisfaction, na.rm=TRUE),
+    avg_absences = mean(absences, na.rm=TRUE),
+    avg_days_late_last30 = mean(days_late_last30, na.rm=TRUE),
+    avg_special_projects_count = mean(special_projects_count, na.rm = TRUE),
+    active_rate = mean(employment_status == "Active", na.rm = TRUE),
+    termination_rate = mean(employment_status != "Active", na.rm = TRUE),
+    .groups ="drop"
+  )
+manager_summary_extra <- hr_data %>%
+  group_by(manager_name, performance_score) %>%
+  summarize(total = n(), .groups ="drop_last") %>%
+  mutate(manager_total = sum(total))%>%
+  mutate(
+    percentage = round((total/manager_total)*100,1)
+  )%>%
+  pivot_wider(
+    names_from=performance_score,
+    values_from=c(total, percentage),
+    values_fill = list(total=0,percentage=0)
+  )%>%
+  janitor::clean_names()
+
+manager_summary <- manager_summary %>%
+  left_join(manager_summary_extra, by="manager_name")
+
+manager_summary %>%
+  select(-manager_total)
+```
+
+### Showing current dataset
+
+```{r}
+print(manager_summary, width=Inf)
+```
+
+### Exceeds vs Needs Improvement Ranking across all Managers
+
+```{r}
+manager_summary %>%
+  mutate(order_exceeds = percentage_exceeds) %>%
+  pivot_longer(
+    cols = c(percentage_exceeds, percentage_needs_improvement),
+    names_to = "metric", values_to = "percentage"
+  ) %>%
+  ggplot(aes(
+    x = reorder(manager_name, order_exceeds),
+    y = percentage,
+    fill = metric
+  )) +
+  geom_col(width = 0.8) +
+  geom_text(
+    aes(label = paste0(round(percentage, 1), "%")),
+    position = position_stack(vjust = 0.5),
+    size = 3,
+    color = "white"
+  ) +
+  coord_flip() +  # 🔥 back to horizontal
+  labs(
+    title = "Manager Performance (Exceeds vs Needs Improvement)",
+    x = "Manager",
+    y = "Percentage"
+  ) +
+  scale_fill_manual(
+    values = c(
+      "percentage_exceeds" = "#1f78b4",        # blue
+      "percentage_needs_improvement" = "#ff7f00" # orange
+    ),
+    labels = c(
+      "percentage_exceeds" = "Exceeds",
+      "percentage_needs_improvement" = "Needs Improvement"
+    )
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    legend.title = element_blank(),
+    plot.title = element_text(face = "bold", hjust = 0.5)
+  )
+
+```
+
+#### **Interpretation and Business Insight:**
+
+The plot demonstrates a clear relationship between the manager and their team's performance. The wide variance in the percentages of employees exceeding expectations versus those needing improvement suggests that a manager's leadership style and influence are significant factors in their team's success.
+
+- High-Performing Managers: Managers like Brannon Miller, Janet King, and Alex Sweetwater have a high percentage of employees exceeding expectations (29.4%, 25%, and 22.2%, respectively) and a very low percentage needing improvement. This indicates that their management style fosters an environment where employees are consistently high-achievers.
+
+- Managers Needing Development: Conversely, managers like Elijah Gray and David Stanley have a higher percentage of employees needing improvement compared to the top performers. This could signal a need for targeted leadership training, coaching, or mentorship for these managers to improve their team's overall performance.
+
+- The four managers with no stacked bar charts—Peter Monroe, John Smith, Brian Champagne, and Brandon R. LeBlanc—have no employees with 'exceeds' or 'needs improvement' ratings. Their teams' performance ratings are concentrated in the 'fully meets' and 'pip' categories, which requires further data exploration to understand the underlying dynamics
+
+### Manager Rankings by Performance Level
+
+```{r}
+manager_summary %>%
+  arrange(desc(avg_performance)) %>%   # sort managers by performance
+  ggplot(aes(x = reorder(manager_name, avg_performance), 
+             y = avg_performance)) +
+  geom_col(fill = "steelblue") +
+  coord_flip() +   # horizontal bars
+  labs(
+    title = "Managers Ranked by Average Performance Score",
+    x = "Manager",
+    y = "Average Performance Score"
+  ) +
+  theme_minimal()
+```
+
+#### **Interpretation and Business Insight:**
+
+**Top-Performing Managers:** Managers like Lynn Daneault, Alex Sweetwater, and Ketsia Liebig are at the top, with the highest average performance scores. This suggests their leadership styles, coaching, and support systems are highly effective at fostering high performance across their teams.
+
+**Lower-Performing Managers:** Conversely, managers at the bottom of the list, such as Brandon R. LeBlanc and Brannon Miller, have the lowest average performance scores. This could point to areas where these managers might need additional training or support to improve their leadership skills and team outcomes.
+
+The clear disparity in scores is a powerful business insight. It shows that the manager is a critical variable in the employee performance equation. To improve overall company performance, the business should:
+
+- Investigate and replicate the practices of top-ranking managers like Lynn Daneault.
+- Implement targeted development plans and provide coaching to managers with lower average scores.
+    
+### Top 5 Managers
+Top 5 Managers – Highest Performance
+
+```{r}
+manager_summary %>%
+  arrange(desc(avg_performance)) %>%
+  slice_head(n=5) %>%
+  ggplot(aes(x=reorder(manager_name,avg_performance), y=avg_performance))+
+  geom_col(fill="steelblue")+
+  geom_text(aes(label = round(avg_performance, 2)),   # show scores
+            hjust = -0.1, size = 4) + 
+  coord_flip() +
+  labs(
+    title = "Top 5 Managers with Best Average Performance",
+    x = "Manager",
+    y = "Average Performance Score"
+  ) +
+  theme_minimal()
+```
+
+### Top 5 Managers 
+Top 5 Managers - Lowest Performance
+
+```{r}
+manager_summary %>%
+  arrange(avg_performance) %>%        # ascending order = lowest first
+  slice_head(n = 5) %>%               # keep bottom 5
+  ggplot(aes(x = reorder(manager_name, avg_performance), 
+             y = avg_performance)) +
+  geom_col(fill = "tomato") +
+  geom_text(aes(label = round(avg_performance, 2)),   # show scores
+            hjust = -0.1, size = 4) +  
+  coord_flip() +
+  labs(
+    title = "Bottom 5 Managers with Lowest Average Performance",
+    x = "Manager",
+    y = "Average Performance Score"
+  ) +
+  theme_minimal()
+```
+
+### 2nd Question: What is the organization’s diversity profile (e.g., gender, race, age)?
+
+Defining my scope of work for this business question
+
+```{r}
+# We create another variable the data to answer this question (diversity_profile)
+
+diversity_profile <- hr_data %>%
+  select(-zip, -state, -manager_name, -recruitment_source, -engagement_survey, 
+         -emp_satisfaction, -special_projects_count, -last_performance_review_date, 
+         -days_late_last30, -absences, -from_diversity_job_fair, -dateof_hire, 
+         -dateof_termination, -hire_year, -hire_month, -performance_score,
+         -term_reason)
+print(diversity_profile, width=Inf)
+```
+
+### Showing current dataset
+
+```{r}
+print(diversity_profile)
+```
+
+### Gender distribution
+
+```{r}
+diversity_profile %>%
+  group_by(sex, department) %>%
+  summarize(total_count = n(), .groups="drop") %>%
+  group_by(department) %>%
+  mutate(percentage = round(total_count / sum(total_count) *100,1)) %>%
+  ungroup() %>%
+  
+  ggplot(aes(x=department, y=percentage, fill=sex)) +
+  geom_bar(stat="identity")+
+  geom_text(aes(label = paste0(percentage, "%")),
+            position = position_stack(vjust = 0.5), size = 3) +
+  labs(title = "Gender Distribution by Department",
+       x = "Department",
+       y = "Percentage") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+#### **Interpretation and Business Insight:**
+
+The chart shows that the gender distribution of our workforce varies significantly across departments. A key finding is the clear gender imbalance in several areas of the company.
+
+- The Admin Offices, Production, and Software Engineering departments have a higher percentage of female employees. In Software Engineering, for example, women make up **60%** of the workforce.
+
+- In contrast, male employees outnumber female employees in the IT/IS and Sales departments, where they represent **55.6%** and **54.2%** of the staff, respectively.
+
+This uneven distribution suggests that we may have different talent pipelines and recruitment strategies for various roles. While some roles naturally attract a higher percentage of one gender, a significant imbalance can limit our team's perspectives and innovation. To foster a more inclusive and well-rounded workforce, we should examine our hiring processes for all departments. We can set goals to improve gender representation where it is most imbalanced, ensuring we are attracting a diverse range of candidates for every role
+
+### Age distribution
+
+```{r}
+# We add a new variable for a reasonable EDA
+
+diversity_profile <- diversity_profile %>%
+  mutate(age_group = case_when(
+    age >= 18 & age < 25 ~ "18-24 group",
+    age >= 25 & age < 35 ~ "25-34 group",
+    age >= 35 & age < 45 ~ "35-44 group",
+    age >= 45 & age < 55 ~ "45-54 group",
+    age >=55 & age <= 65 ~ "55-65 group",
+    TRUE ~ "Other"
+  ))
+
+ggplot(diversity_profile, aes(x = age_group)) +
+  geom_bar(fill = "steelblue", color = "white", alpha = 0.8) +
+  labs(
+    title = "Distribution of Age across all Employees",
+    x = "Age Group",
+    y = "Count"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    panel.grid.minor = element_blank(),
+    panel.grid.major.x = element_blank()
+  )
+```
+
+```{r}
+diversity_profile %>%
+  group_by(age_group) %>%
+  summarize(total = n(), .groups="drop") %>%
+  mutate(percentage = round((total/sum(total))*100,1))
+```
+
+#### **Interpretation and Business Insight**
+
+Based on the chart, our workforce is heavily concentrated in the 35-44 group and 45-54 group, making up 55.4% and 35.7% of employees, respectively. Together, these two segments represent over 90% of our entire workforce. In contrast, the 55-65 group accounts for 7.1% of the workforce, while the 25-34 group is the smallest, at only 1.9%.
+
+This age distribution shows that we have a highly experienced and stable workforce. However, the minimal representation of employees under 35 could be a concern. This creates a risk of not having a strong talent pipeline for the future and losing institutional knowledge as our most experienced employees eventually retire. To ensure a balanced and sustainable workforce, we should investigate our current recruitment strategies to attract more early-career professionals.
+
+### Race Diversity
+
+```{r}
+diversity_profile %>%
+  mutate(race_clean = case_when(
+    race_desc == "White" ~ "White",
+    race_desc == "Black or African American" ~ "Black",
+    race_desc == "Two or more races" ~ "Multiracial",
+    race_desc == "Asian" ~ "Asian",
+    race_desc == "American Indian or Alaska Native" ~ "Native American",
+    race_desc == "Hispanic" ~ "Hispanic",
+    TRUE ~ race_desc
+  )) %>%
+  ggplot(aes(x = fct_infreq(race_clean))) +   # orders from most to least
+  geom_bar(fill = "steelblue", color = "white") +
+  geom_text(stat = "count", aes(label = ..count..), vjust = -0.3, size = 3.5) +
+  labs(
+    title = "Employee Distribution by Race (Ordered)",
+    x = "Race",
+    y = NULL
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    axis.text.y = element_blank(),
+    axis.ticks.y = element_blank(),
+    panel.grid.major.y = element_blank()
+  )
+```
+
+#### **Interpretation and Business Insight:**
+
+The data shows a workforce that is predominantly White (160 employees) and Black (68 employees). A significant business insight is the dramatic underrepresentation of other racial groups. The number of employees who are Asian (26), Multiracial (11), Native American (3), and Hispanic (1) is extremely low in comparison.
+
+This lack of racial diversity could pose a risk to the organization. A non-diverse workforce can limit our ability to innovate and solve problems by excluding different perspectives and experiences. It may also hinder our connection with a diverse customer base and create a perception of a non-inclusive work environment.
+
+To address this, we should analyze our recruitment, hiring, and retention strategies. We need to investigate why certain racial groups are underrepresented and implement targeted strategies to attract and retain a more diverse talent pool. This could include partnerships with diverse community organizations, revised hiring policies, and a focus on creating an inclusive culture where all employees feel they belong
+
+### Tenure and Citizenship Status
+
+```{r}
+diversity_profile %>%
+  group_by(citizen_desc) %>%
+  summarize(avg_tenure = mean(tenure_in_years, na.rm = TRUE)) %>%
+  ggplot(aes(x = citizen_desc, y = avg_tenure, fill = citizen_desc)) +
+  geom_col(color = "white") +
+  geom_text(aes(label = round(avg_tenure, 0)), vjust = -0.3, size = 4) +
+  labs(
+    title = "Average Tenure by Citizenship Status",
+    x = "Citizenship Status",
+    y = "Average Tenure (Years)"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none")
+```
+
+#### **Interpretation and Business Insight:**
+
+- Based on the chart, we can say that, while Eligible Non-Citizen employees have the longest average tenure at 10.1 years, it's important to note the significant disparity in tenure among the different groups.
+
+- There's a substantial 4-year gap between the average tenure of Eligible Non-Citizen employees (10 years) and Non-Citizen employees (6 years), which is the shortest tenure among all groups. This large difference suggests that non-citizen employees without a more secure residency status may face different challenges that lead to higher turnover.
+
+- The average tenure for U.S. Citizens is 9 years, which is much closer to the Eligible Non-Citizen group than it is to the Non-Citizen group. This indicates that employees with a more permanent status, whether as a U.S. citizen or an eligible non-citizen, tend to have a similar and longer-term commitment to the organization.
+
+These insights suggest that the organization should investigate the factors contributing to the shorter tenure of our Non-Citizen employees. Understanding and addressing their specific challenges could help increase their retention and lead to a more stable workforce across all citizenship statuses.
+
+### 3rd Question: Which recruiting sources contribute most to building a diverse workforce?
+
+Defining my scope of work for this business question
+
+```{r}
+# We create another variable the data to answer this question (diverse_hire)
+diverse_hire <- hr_data %>%
+  filter(employment_status =="Active") %>%
+  select(recruitment_source, age, sex, from_diversity_job_fair, employment_status, race_desc,
+         citizen_desc)
+```
+
+**Note:** All the active employees within the workforce for this analysis were selected. 
+
+### Showing current dataset to answer the business question
+
+```{r}
+print(diverse_hire, width=Inf)
+```
+
+### Adding a new variable
+
+```{r}
+diverse_hire <- diverse_hire %>%
+  mutate(
+    is_diverse = if_else(race_desc != "White" | from_diversity_job_fair =="Yes",1,0)
+  )
+```
+
+**We want to build a binary flag that marks each employee as either:**
+- 1 → Yes, this employee is considered diverse
+- 0 → No, this employee is not considered diverse
+
+**That way we can:**
+
+- Sum the 1s → number of diverse employees.
+- Take mean of the 1s → proportion/percentage of diverse employees.
+
+✅ In short: assigning 1 and 0 is a convenient way to make the variable numeric, so we can easily aggregate and calculate percentages.
+
+### Diversity Contribution by Recruiting Source
+
+```{r}
+diverse_hire %>%
+  group_by(recruitment_source) %>%
+  summarize(
+    total_hires = n(),
+    diverse_hires = sum(is_diverse, na.rm = TRUE),
+    percentage_diverse = round(100 * diverse_hires / total_hires,1)
+  )%>%
+  arrange(desc(percentage_diverse))%>%
+  ggplot(aes(x=reorder(recruitment_source, percentage_diverse), y=percentage_diverse))+
+  geom_col(fill="steelblue")+
+   coord_flip() +
+  geom_text(aes(label = paste0(percentage_diverse, "%")), hjust = -0.1, size = 3) +
+  labs(title = "Diversity Contribution by Recruiting Source",
+       x = "Recruitment Source", y = "% Diverse Hires") +
+  theme_minimal()
+```
+
+#### **Interpretation and Business Insight:**
+
+**Note:**: We consider an employee diverse when he isn't white and comes from a diversity job fair.
+
+The plot clearly shows that the "Diversity Job Fair" is by far the most effective recruiting source, with 100% of its hires contributing to a diverse workforce. This is a significant finding that should guide future recruiting strategies. The "Website" is the next most successful source at 50%, followed by "Google Search," "Indeed," and "LinkedIn," all clustered around 40%. Sources like "Employee Referral" and "CareerBuilder" contribute the least, at 25% and 20% respectively. 
+
+From a business perspective, the company should double down on its investment in diversity job fairs, as they are a proven channel for achieving diversity goals. The other top-performing digital sources (Website, Google Search, Indeed, LinkedIn) are also effective and should continue to be utilized. The company should investigate the low performance of employee referrals and CareerBuilder to understand the underlying causes and determine if a change in strategy is needed.
+
+### Absolute contribution (counts, not percentages)
+
+```{r}
+diverse_hire %>%
+  group_by(recruitment_source) %>%
+  summarize(diverse_hires = sum(is_diverse, na.rm = TRUE)) %>%
+  arrange(desc(diverse_hires))
+```
+
+#### **Interpretation and Business Insight:**
+
+Based on the plot showing absolute counts, LinkedIn is the most productive recruiting source for a diverse workforce, bringing in the highest volume of diverse hires due to its large professional network.
+
+The key difference between this plot and the percentage plot is that this plot measures volume (the total number of diverse hires, or "1s"), while the other measures efficiency (the percentage of diverse hires out of all hires, comparing "1s" to "1s" and "0s"). This is why a highly targeted source like the "Diversity Job Fair" has a 100% efficiency rate, even if its total volume is smaller.
+
+The business insight is to adopt a two-pronged recruiting strategy: leverage LinkedIn for its sheer volume to meet overall hiring goals, and continue to invest in highly efficient and targeted sources like the "Diversity Job Fair" to maximize diversity contributions per hire.
+
+### Compare diverse vs non-diverse per source
+
+```{r}
+diverse_hire %>%
+  group_by(recruitment_source, is_diverse) %>%
+  summarise(total = n()) %>%
+  mutate(percentage = round(100 * total / sum(total), 1)) %>%
+  ggplot(aes(x = reorder(recruitment_source, -percentage), y = percentage, fill = factor(is_diverse))) +
+  geom_col() +
+  coord_flip() +
+  labs(title = "Diverse vs Non-Diverse Hires by Source",
+       x = "Recruitment Source", y = "Percentage",
+       fill = "Diverse") +
+  theme_minimal()
+```
+
+#### **Interpretation and Business Insight:**
+
+Based on the chart, the recruiting sources that contribute the least to a diverse workforce are Other and CareerBuilder, as they have a minimal percentage of hires in the diverse category (indicated by '1').
+
+This observation reveals a significant opportunity for optimization. The low percentage of diverse hires from sources like CareerBuilder and the "Other" category suggests that these channels are either not attracting diverse candidates or are not effectively targeting them. 
+
+A strategic business insight is that we should investigate the content and placement of our job postings on these platforms. We might consider revising our job descriptions to be more inclusive, or reevaluating our ad spend to reallocate funds from these underperforming sources to more fruitful channels, such as Diversity Job Fairs. By analyzing why these sources are underperforming, we can either improve their effectiveness or redirect resources to proven, diversity-focused recruitment efforts.
+
+### 4th Question: Can we predict employee termination (voluntary or involuntary)? With what accuracy?
+
+Defining my scope of work for this business question
+
+```{r}
+# We create another variable the data to answer this question (terminated)
+terminated <- hr_data %>%
+  filter(employment_status != "Active") %>%
+  select(-employee_name, -emp_id, -zip, -state, -dateof_hire, -dob, -term_reason) %>%
+  mutate(
+    turnover_status = if_else(employment_status == "Voluntarily Terminated", 1,0),
+    month_date_of_termination = month(dateof_termination, label = TRUE, abbr = TRUE),
+    year_date_of_termination = year(dateof_termination)
+  )
+```
+
+- We exclude "Active" employees, because they are still employed and not relevant to this comparison.
+
+- We focus only on "Voluntarily Terminated" (voluntary turnover) vs "Terminated for Cause" (involuntary turnover).
+
+- We create a binary variable turnover_status:
+  - 1 = Voluntarily terminated
+  - 0 = Involuntarily terminated
+
+### Showing current dataset to work with
+
+```{r}
+print(terminated, width=Inf)
+```
+
+### Can Citizenship Status have an influence?
+
+```{r}
+terminated %>%
+  group_by(citizen_desc) %>%
+  summarize(total_voluntarily_terminated = sum(turnover_status))
+```
+
+#### **Answer:**
+- We can see that US citizens is the group with the highest number of voluntarily terminated, because it's very likely they don't have too much pressure on their shoulders to land a different job or pivot to another career, compared to the Non-citizen group or Eligible Non Citizen.
+
+### May family situation correlate with voluntary exits?
+
+```{r}
+terminated %>%
+  group_by(marital_desc) %>%
+  summarize(
+    voluntarily_terminated = sum(turnover_status == 1),
+    involuntarily_terminated = sum(turnover_status == 0),
+    total_employees = n(),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    pct_voluntary = round(100 * voluntarily_terminated / total_employees, 1),
+    pct_involuntary = round(100 * involuntarily_terminated / total_employees, 1)
+  )%>%
+  print(width=Inf)
+```
+
+#### **Interpretation and Business Insight:**
+
+Divorced employees show the strongest correlation with voluntary exits, as 100% of terminations in this group were voluntary. For married and single employees, the rates of voluntary exits are also relatively high (82.1% and 76.7% respectively), while widowed employees show a similar trend (75%). However, the widowed category has very few data points (only 4 employees), so no strong conclusions can be drawn for this group.
+
+Overall, while divorced employees stand out as more prone to voluntary exits, marital status as a whole does not appear to be a decisive factor, since single, married, and widowed employees show similar voluntary exit rates.
+
+### Short-tenured employees often have higher quit risk.
+
+```{r}
+terminated %>%
+  group_by(turnover_status) %>%
+  summarize(
+  avg_tenure = mean(tenure_in_years, na.rm = TRUE),
+    median_tenure = median(tenure_in_years, na.rm = TRUE),
+    count = n())
+ggplot(terminated, aes(x = tenure_in_years, fill = factor(turnover_status))) +
+  geom_density(alpha = 0.5) +
+  labs(fill = "Turnover Status", 
+       title = "Distribution of Tenure by Turnover Type",
+       x = "Tenure (years)", y = "Density")
+```
+
+#### **Interpretation and Business Insight:**
+
+- 1 = Voluntarily Terminated / 0 = Involuntarily Terminated
+- Employees within their first four years of tenure are more likely to leave voluntarily, possibly due to lower engagement or weaker attachment to the company. In contrast, involuntary terminations are relatively rare during this period, suggesting a lower likelihood of dismissal early on. From the fifth year onward, both voluntary and involuntary terminations decline, indicating that employees who stay beyond this point are more committed and aligned with long-term goals. After approximately 7.5 years, the gap between voluntary and involuntary terminations disappears, reflecting a stable and retained workforce.
+
+### In which season of the year are more voluntarily and involuntarily turnovers?
+
+```{r}
+ terminated %>%
+  group_by(month_date_of_termination, turnover_status) %>%   # better: termination_month if available
+  summarise(count = n(), .groups = "drop") %>%
+  ggplot(aes(x = month_date_of_termination, y = count, color = factor(turnover_status), group = turnover_status)) +
+  geom_line(size = 1.2) +
+  geom_point(size = 2) +
+  labs(title = "Seasonal Turnover Trends",
+       x = "Month",
+       y = "Number of Employees",
+       color = "Turnover Type") +
+  scale_color_manual(values = c("0" = "red", "1" = "blue"),
+                     labels = c("Involuntary", "Voluntary")) +
+  theme_minimal()
+```
+
+#### **Interpretation and Business Insight:**
+
+- Within the voluntarily terminated group, the highest spikes occur in mid-June and September, while the lowest points are in December and March. Similarly, for the involuntarily terminated group, September also shows a spike, with March and December being the lowest points. This pattern suggests that March, September, and December are critical months for workforce changes, likely reflecting key business cycles, performance evaluations, or strategic decisions made by the company.
+
+### Year-over-Year Turnover Trends
+
+```{r}
+terminated %>%
+  group_by(year_date_of_termination, turnover_status) %>%   # better: termination_month if available
+  summarise(count = n(), .groups = "drop") %>%
+  ggplot(aes(x = year_date_of_termination, y = count, color = factor(turnover_status), group = turnover_status)) +
+  geom_line(size = 1.2) +
+  geom_point(size = 2) +
+  labs(title = "Year-over-Year Turnover Trends",
+       x = "Year",
+       y = "Number of Employees",
+       color = "Turnover Type") +
+  scale_color_manual(values = c("0" = "red", "1" = "blue"),
+                     labels = c("Involuntary", "Voluntary")) +
+  theme_minimal()
+```
+
+#### **Interpretation and Business Insight:**
+
+Voluntary turnover (blue line) shows a sharp increase from 2010, peaking between 2015 and 2016 with the highest number of exits, before dropping significantly in 2017 and partially recovering in 2018. In contrast, involuntary turnover (red line) remained consistently lower throughout the years, with a modest peak in 2015 and some fluctuations afterward.
+
+This pattern suggests that most workforce changes are driven by employees’ own decisions rather than company actions. The spike in voluntary exits around 2015–2016 could point to organizational challenges—such as job satisfaction, leadership changes, or market opportunities—that prompted employees to leave. Monitoring voluntary turnover drivers is critical, since this type of exit is harder to control and can directly impact retention of top talent.
+
+### Disengaged employees are more likely to quit
+
+```{r}
+# Engagement vs turnover
+ggplot(terminated, aes(x = factor(turnover_status),
+                    y = engagement_survey,
+                    fill = factor(turnover_status))) +
+  geom_boxplot(alpha = 0.6) +
+  labs(x = "Turnover Status (0 = Involuntarily Terminated, 1 = Voluntarily Terminated)",
+       y = "Engagement Survey Score",
+       title = "Engagement Survey vs Turnover") +
+  theme_minimal()
+```
+
+#### **Interpretation and Business Insight:**
+
+The boxplot shows that employees who left voluntarily (1) reported slightly higher engagement scores on average compared to those who were involuntarily terminated (0). Involuntary terminations are more common among employees with lower engagement scores, as seen in the wider spread toward the lower end of the scale.
+
+This indicates that disengaged employees are more likely to be let go by the company, while voluntary leavers are not necessarily disengaged—they may still feel relatively engaged but leave due to external opportunities, career growth, or other personal reasons.
+
+In short, low engagement correlates more with involuntary exits than with voluntary ones, meaning disengagement is a stronger predictor of being fired rather than quitting.
+
+```{r}
+# correlations
+cor(terminated$engagement_survey, terminated$turnover_status, use = "complete.obs")
+cor(terminated$emp_satisfaction, terminated$turnover_status, use = "complete.obs")
+```
+
+#### **Interpretation and Business Insight**
+
+The correlation between engagement survey scores and turnover status is 0.26. This is a weak positive correlation, meaning that as engagement scores increase, employees are slightly more likely to leave voluntarily (turnover_status = 1). This reinforces what we saw in the boxplot: voluntary leavers aren’t necessarily disengaged, and in fact, some of them report higher engagement.
+
+The correlation between employee satisfaction and turnover status is only 0.09, which is very close to zero. This suggests that satisfaction is not a strong predictor of whether an employee stays or leaves.
+
+**Business takeaway:** Low engagement is not directly driving voluntary exits—it seems more associated with involuntary terminations. Voluntary exits may instead be linked to external factors like better opportunities or career progression, rather than dissatisfaction or disengagement.
+
+### 5th Question: Are there pay disparities across departments, genders, or roles?
+
+Defining my scope of work for this business question
+
+```{r}
+# We create another variable the data to answer this question (pay_disparity)
+
+pay_disparity <- hr_data %>%
+  select(salary, sex, position, department, emp_id)
+```
+
+### Showing current dataset to answer the business question
+
+```{r}
+print(pay_disparity, width=Inf)
+```
+
+### Percentage of Salary by Gender Across Departments
+
+```{r}
+pay_disparity %>%
+  group_by(department, sex) %>%
+  summarize(
+    avg_salary = mean(salary, na.rm=TRUE), .groups = "drop")%>%
+  group_by(department)%>%
+  mutate(total_dept_salary = sum(avg_salary)) %>%
+  ungroup() %>%
+  mutate(percentage = round((avg_salary / total_dept_salary)*100,1)
+         )%>%
+  ggplot(aes(x=department, y=percentage, fill=sex))+
+  geom_bar(stat="identity")+
+  geom_text(aes(label=percentage), position = position_stack(vjust = 0.5))+
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(
+    title = "Percentage of Salary by Gender Across Departments",
+    x = "Department",
+    y= "Percentage %"
+  )
+```
+
+```{r}
+department_diff <- pay_disparity %>%
+  group_by(department, sex) %>%
+  summarize(
+    avg_salary = mean(salary, na.rm=TRUE), .groups = "drop")%>%
+  group_by(department)%>%
+  mutate(total_dept_salary = sum(avg_salary)) %>%
+  ungroup() %>%
+  mutate(percentage = round((avg_salary / total_dept_salary)*100,1)
+         )
+department_diff
+```
+
+```{r}
+department_diff %>%
+  group_by(department) %>%
+  summarize(
+    perc_diff = abs(percentage[sex == "M"] - percentage[sex == "F"]),
+    .groups = "drop"
+  )
+```
+
+#### **Interpretation and Business Insight**
+
+In the Sales department, men earn 2.6% more than women, representing the largest pay gap in favor of men. This is followed by Admin Offices with a 1.8% difference. In contrast, Software Engineering and IT/IS show very small differences of 0.2%, indicating greater gender pay equality. In Production, the difference is 0.6%, also showing relative equality. While these percentages may seem modest, even small gaps can impact employee morale and perceptions of fairness, making it important for the company to monitor and address them proactively.
+
+### Salary Distribution by Department
+
+```{r}
+pay_disparity %>%
+  ggplot(mapping=aes(x = department, y = salary)) +
+  geom_boxplot(fill = "lightblue") +
+  ggtitle("Salary Distribution by Department") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+### Zooming in on Outliers
+
+```{r}
+bp <- boxplot(salary ~ department, data=pay_disparity, plot = FALSE)
+bp$out
+```
+
+```{r}
+pay_disparity_outliers <- pay_disparity %>%
+  group_by(department) %>%
+  mutate(
+    Q1 = quantile(salary, 0.25),
+    Q3 = quantile(salary, 0.75),
+    IQR = Q3 - Q1,
+    outlier = salary < (Q1 - 1.5*IQR) | salary > (Q3 + 1.5*IQR)
+  ) %>%
+  ungroup() %>%
+  filter(outlier)  # keep only the outliers
+pay_disparity_outliers
+```
+
+```{r}
+ggplot(pay_disparity, aes(x = department, y = salary)) +
+  geom_boxplot(fill = "lightblue") +
+  geom_text_repel(
+    data = pay_disparity_outliers,
+    aes(label = emp_id),
+    color = "red"
+  ) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ggtitle("Salary Distribution by Department (Employee_ID Labeled as Outliers)")
+
+```
+
+#### **Interpretation and Business Insight**
+
+Salaries vary notably across departments. IT/IS and Software Engineering are the two highest-paying departments, with median salaries above 100k. However, IT/IS shows substantial variability, with outliers reaching above 200k, likely representing senior leadership roles. In contrast, Production and Sales show lower and more consistent salary ranges, though a few outliers exist in Production.
+
+From an equity perspective, the large spread in IT/IS suggests possible pay inequities within the department, as similar roles may be compensated very differently. Departments like Production and Sales display tighter distributions, implying more equitable pay structures. Further analysis should verify whether the high outlier salaries in IT/IS align with job responsibilities and market benchmarks, or if they represent potential internal disparities.
+
+### **Average salary by role and gender**
+
+```{r}
+avg_salary_role_gender <- pay_disparity %>%
+  group_by(position) %>%
+  mutate(role_size = n()) %>%
+  mutate(position_grouped = if_else(role_size < 5, "Other", position)) %>%
+  group_by(position_grouped, sex) %>%
+  summarize(avg_salary = mean(salary, na.rm=TRUE), .groups="drop") %>%
+  group_by(position_grouped) %>%
+  mutate(overall_avg = mean(avg_salary)) %>%   # overall avg per role
+  ungroup()
+
+  ggplot(avg_salary_role_gender, aes(x = reorder(position_grouped, -overall_avg), 
+             y = avg_salary, 
+             fill = sex)) +
+  geom_bar(stat="identity", position="dodge") +
+  geom_text(aes(label = scales::dollar(avg_salary, accuracy = 1)), 
+            position = position_dodge(width = 0.9), 
+            hjust = -0.1, size = 3) +
+  coord_flip(clip="off") +
+  theme_minimal() +
+  labs(
+    title="Average Salary by Role and Gender (Grouped: Roles <5 Employees → Other)",
+    x="Role",
+    y="Average Salary"
+  )
+
+```
+
+```{r}
+# Create the initial summarized data frame
+avg_salary_role_gender <- pay_disparity %>%
+  group_by(position) %>%
+  mutate(role_size = n()) %>%
+  mutate(position_grouped = if_else(role_size < 5, "Other", position)) %>%
+  group_by(position_grouped, sex) %>%
+  summarize(avg_salary = mean(salary, na.rm = TRUE), .groups = "drop")
+
+# Pivot the data to calculate the difference
+avg_salary_diff <- avg_salary_role_gender %>%
+  pivot_wider(names_from = sex, values_from = avg_salary) %>%
+  mutate(
+    perc_diff = ((M - F) / F) * 100
+  ) %>%
+  select(position_grouped, M, F, perc_diff)
+
+# Data Frame 1: Full details
+data_frame_1 <- avg_salary_diff %>%
+  mutate(
+    total_avg = M + F, # Sum for the example output structure
+    M_perc = (M / total_avg) * 100, # Male percentage for example
+    F_perc = (F / total_avg) * 100 # Female percentage for example
+  ) %>%
+  select(position_grouped, M, F, total_avg, M_perc, F_perc, perc_diff)
+print(data_frame_1)
+```
+
+#### **Interpretation and Business Insight**
+
+The analysis shows clear pay disparities across roles and genders, with male employees generally earning more than female employees. To ensure stable comparisons, roles with fewer than five employees were grouped into an “Other” category, while outliers were treated separately, as they likely reflect senior leadership rather than systematic inequities.
+
+**Key findings include:**
+
+- Network Engineer: The most critical disparity, with men earning $68,225 versus $51,674 for women a 32% gap.
+- Other: A 12.2% gap, with men earning $107,432 compared to $95,719 for women.
+- Database Administrator: A 6.4% gap in favor of men.
+- Roles with minimal or reversed gaps: Software Engineers (-0.5%), Data Analysts (+2.0% for women), and Production Technicians II (+2.8% for women) show relative parity or slight advantage for women.
+
+From a business perspective, these disparities can affect employee morale, retention, and perceptions of fairness. The Network Engineer role requires immediate review, while the “Other” category and Database Administrator roles warrant closer investigation. A structured compensation audit is recommended to align salaries with both market standards and internal equity.
+
+---
+
+## 📋 Summary of Business 
+
+---
+
+#### 1) Does the reporting structure (manager → employee) influence performance?
+
+Yes. Teams led by higher-performing managers have a greater share of employees exceeding expectations and fewer needing improvement. Examples cited include managers like Lynn Daneault, Alex Sweetwater, and Ketsia Liebig with up to around 29.4% of direct reports exceeding expectations, while managers such as Elijah Gray and David Stanley show higher proportions of employees needing improvement. This suggests a meaningful leadership effect on team outcomes.
+
+**Assumption noted:** The analysis presents comparative proportions by manager; while directionality is clear, causal mechanisms (coaching frequency, span of control, team complexity) aren’t quantified.
+
+---
+
+#### 2) What is the organization’s diversity profile (gender, race, age)?
+
+- **Gender:** Departmental variation is present. Software Engineering shows higher female representation (about 60%), while IT/IS and Sales skew male (~55–56%).
+
+- **Race:** Workforce is predominantly White (~160) and Black (~68), with smaller representation from Asian (~26), Multiracial (~11), Native American (~3), and Hispanic (~1).
+    
+- **Age:** Concentrations in 35–44 (≈55.4%) and 45–54 (≈35.7%). Under 35 is underrepresented (~1.9%).
+    
+- **Citizenship/Tenure:** U.S. citizens average ~9 years tenure vs. non-citizens ~6 years, indicating potential retention gaps.
+
+---
+
+#### 3) Which recruiting sources contribute most to building a diverse workforce?
+
+- **Most effective share of diverse hires:** Diversity Job Fairs (near 100% diverse), followed by Company Website (~50%), Google Search, Indeed, and LinkedIn (~40%).
+
+- **Volume:** LinkedIn and Indeed yield the largest absolute number of diverse hires (≈22–23 each).
+    Underperformers: CareerBuilder and “Other” channels contribute fewer diverse hires (~20–25%).
+
+- **Interpretation:** Diversity Job Fairs are highly targeted and efficient for diversity rate, while LinkedIn/Indeed provide volume that scales.
+
+#### 4) Can we predict employee termination (voluntary or involuntary)? With what accuracy?
+
+- **Signals:** Engagement scores show a weak positive correlation with voluntary turnover risk (around 0.26), suggesting disengagement is a weak but present predictor.
+
+- **Patterns:** Voluntary turnover is higher within the first four years of tenure; seasonal peaks occur around June and September; there is a notable spike in 2015–2016.
+
+---
+
+#### 5) Are there pay disparities across departments, genders, or roles?
+
+- **Gender gaps by department:** Men earn about 2–3% more than women in departments like Sales (~2.6%) and Admin Offices (~1.8%).
+
+- **Role-specific gaps:** Notably large disparity among Network Engineers (~32%; men ≈ 68,225 vs. women ≈ 51,674).
+
+- **Distribution:** IT/IS and Software Engineering show higher medians (>100k) with some outliers >200k.
+
+---
+
+## 🚀 Key Actions
+
+---
+
+- **Managers & Teams:** Give extra coaching to managers with struggling teams, and check if teams are too large or complex.
+
+- **Hiring & Diversity:** Focus on job fairs and proven platforms, cut weak sources, and work with groups/colleges that bring in diverse talent. Track results at every stage.
+
+- **Keeping Employees:** Improve onboarding in the first months, check in often with surveys and “stay talks,” and time recognition/bonuses around high-risk turnover periods.
+
+- **Pay & Fairness:** Run regular checks to make sure pay is fair, set clear salary ranges, and fix gaps—especially in roles with big differences.
+
+- **Representation:** Build programs for young talent, set diversity goals by department, and support non-citizens with visas and relocation assistance, acknowledging that this may involve additional costs
+
+**Note:** Although this case study was designed to also include predictive modeling and prescriptive analysis, I chose to focus only on descriptive analysis, as that is where my current knowledge is strongest.
+
+---
