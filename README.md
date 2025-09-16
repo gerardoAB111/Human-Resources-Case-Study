@@ -7,6 +7,12 @@ In this project, I analyzed the dataset to uncover meaningful patterns in employ
 
 ---
 
+## 🔗 Live Report
+- **Interactive HTML (GitHub Pages):** (https://gerardoab111.github.io/Human-Resources-Case-Study/)  
+- **Source RMarkdown (.Rmd):** `case_study_bellabeat.Rmd`
+
+---
+
 ## 🎯 Business Task
 
 The business task is to analyze the Human Resources dataset to answer targeted workforce questions on performance, diversity, recruiting effectiveness, turnover prediction, and pay equity.  
@@ -91,4 +97,9 @@ Based on the analysis, the following recommendations are made to guide HR strate
   
 **Note:** Although this case study was designed to also include predictive modeling and prescriptive analysis, I chose to focus only on descriptive analysis, as that is where my current knowledge is strongest.
 
+---
 
+## 👤 Contact
+**Author:** Gerardo Abarca  
+📧 abarcagerardoj777@gmail.com 
+💼 https://www.linkedin.com/in/gerardo-abarca-2389b6328/
