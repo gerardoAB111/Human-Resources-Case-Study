@@ -1,9 +1,10 @@
 # Human Resources Case Study
 
 This repository contains my **Human Resources case study project**, built to strengthen my data analytics portfolio.  
-The dataset, originally published on Kaggle by Richard Huebner, includes detailed employee records such as demographics, job roles, compensation, performance, and termination history.  
+The dataset, originally published on Kaggle by Richard Huebner, includes detailed employee records such as demographics, job roles, compensation, performance, and termination history. 
 
-In this project, I analyzed the dataset to uncover meaningful patterns in **employee performance, retention, turnover, and pay equity**, aiming to generate insights that could inform HR decision-making and strategy.
+In this project, I analyzed the dataset to uncover meaningful patterns in employee performance, retention, turnover, and pay equity, aiming to generate insights that could inform HR decision-making and strategy.
+
 ---
 
 ## 🎯 Business Task
@@ -87,4 +88,7 @@ Based on the analysis, the following recommendations are made to guide HR strate
 - **Keeping Employees:** Improve onboarding, conduct frequent check-ins, and time recognition or bonuses around periods of high turnover risk.  
 - **Pay & Fairness:** Conduct regular audits to ensure pay equity, establish clear salary ranges, and fix identified gaps.  
 - **Representation:** Create programs for young talent and set department-specific diversity goals.
-- **Note:** Although this case study was designed to also include predictive modeling and prescriptive analysis, I chose to focus only on descriptive analysis, as that is where my current knowledge is strongest.
+  
+**Note:** Although this case study was designed to also include predictive modeling and prescriptive analysis, I chose to focus only on descriptive analysis, as that is where my current knowledge is strongest.
+
+
